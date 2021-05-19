@@ -1,7 +1,13 @@
 package main
 
-import "fmt"
+import (
+	"log"
+	"net/http"
+
+	"github.com/itscharlieliu/address-search-backend/api"
+)
 
 func main() {
-	fmt.Println("hello world")
+	http.HandleFunc("/", api.Search)
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
