@@ -21,6 +21,7 @@ type address struct {
 	DaysOnMarket           string
 	PricePerSquareFeet     string
 	HoaPerMonth            string
+	Status                 string
 	NextOpenHouseStartTime string
 	NextOpenHouseEndTime   string
 	Url                    string
@@ -32,8 +33,10 @@ type address struct {
 	Longitude              string
 }
 
-func csvToStructs(addresses [][]string) (results []address) {
+type csvAddresses = [][]string
 
+func csvToStructs(addresses [][]string) []address {
+	results := []address{}
 	for i := 0; i < len(addresses); i++ {
 		results = append(results, address{
 			SaleType:               addresses[i][0],
@@ -53,15 +56,16 @@ func csvToStructs(addresses [][]string) (results []address) {
 			DaysOnMarket:           addresses[i][14],
 			PricePerSquareFeet:     addresses[i][15],
 			HoaPerMonth:            addresses[i][16],
-			NextOpenHouseStartTime: addresses[i][17],
-			NextOpenHouseEndTime:   addresses[i][18],
-			Url:                    addresses[i][19],
-			Source:                 addresses[i][20],
-			MlsNumber:              addresses[i][21],
-			Favorite:               addresses[i][22],
-			Interested:             addresses[i][23],
-			Latitude:               addresses[i][24],
-			Longitude:              addresses[i][25],
+			Status:                 addresses[i][17],
+			NextOpenHouseStartTime: addresses[i][18],
+			NextOpenHouseEndTime:   addresses[i][19],
+			Url:                    addresses[i][20],
+			Source:                 addresses[i][21],
+			MlsNumber:              addresses[i][22],
+			Favorite:               addresses[i][23],
+			Interested:             addresses[i][24],
+			Latitude:               addresses[i][25],
+			Longitude:              addresses[i][26],
 		})
 	}
 
