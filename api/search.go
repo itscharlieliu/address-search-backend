@@ -9,10 +9,10 @@ import (
 	"github.com/itscharlieliu/address-search-backend/utils"
 )
 
-func filterResults(results [][]string, queryParams url.Values, queryParam string, paramIdx int) [][]string {
+func filterResults(results csvAddresses, queryParams url.Values, queryParam string, paramIdx int) csvAddresses {
 	if queriesAddresses, ok := (queryParams[queryParam]); ok {
 		// We make the filteredResult list max size to be the same as the current results size
-		filteredResults := [][]string{}
+		filteredResults := csvAddresses{}
 		for i := 0; i < len(results); i++ {
 			if utils.StringContains(results[i][paramIdx], (queriesAddresses[0])) {
 
@@ -38,7 +38,7 @@ func (handler *BaseHandler) Search(writer http.ResponseWriter, request *http.Req
 	queryParams := request.URL.Query()
 
 	// Make a copy of the addresses for us to work with without worrying about mutating the original
-	results := make([][]string, len(*handler.addresses))
+	results := make(csvAddresses, len(*handler.addresses))
 	copy(results, *handler.addresses)
 
 	// For each query param, we whittle down the size of the results.

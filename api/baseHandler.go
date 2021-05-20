@@ -35,7 +35,7 @@ type address struct {
 
 type csvAddresses = [][]string
 
-func csvToStructs(addresses [][]string) []address {
+func csvToStructs(addresses csvAddresses) []address {
 	results := []address{}
 	for i := 0; i < len(addresses); i++ {
 		results = append(results, address{
@@ -73,10 +73,10 @@ func csvToStructs(addresses [][]string) []address {
 }
 
 type BaseHandler struct {
-	addresses *[][]string // Arrays are already pointers. We don't need to pass in pointer here
+	addresses *csvAddresses // Arrays are already pointers. We don't need to pass in pointer here
 }
 
-func NewBaseHandler(addresses *[][]string) *BaseHandler {
+func NewBaseHandler(addresses *csvAddresses) *BaseHandler {
 	return &BaseHandler{
 		addresses: addresses,
 	}
