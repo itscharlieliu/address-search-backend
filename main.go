@@ -23,14 +23,19 @@ func main() {
 
 	addresses, err := reader.ReadAll()
 
+	// Cut out the first line. We don't want the headers
+	addresses = addresses[1:]
+
 	if err != nil {
 		log.Fatal("Unable to parse csv")
 	}
 
+	addressesFile.Close()
+
 	// Create the base handler to hold all the data
-	handler := api.NewBaseHandler(addresses)
+	handler := api.NewBaseHandler(&addresses)
 
 	// Register the api endpoint for searching
-	http.HandleFunc("/", handler.Search)
+	http.HandleFunc("/search", handler.Search)
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
