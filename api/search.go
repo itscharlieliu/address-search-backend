@@ -2,27 +2,38 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"sort"
 	"strings"
 
+	lru "github.com/hashicorp/golang-lru"
 	"github.com/itscharlieliu/address-search-backend/utils"
 )
 
-func addToConfidenceMap(addresses *csvAddresses, confidenceMap *map[int]int, cleanedString string, addressIdx int, columnIdx int) {
+func addToConfidenceMap(confidenceMap *map[int]int, addressIdx int) {
+	if confidence, ok := (*confidenceMap)[addressIdx]; ok {
+		(*confidenceMap)[addressIdx] = confidence + 1
+		return
+	}
+	(*confidenceMap)[addressIdx] = 1
+}
+
+// Check if the row contains the requested word. If it does, then increment the confidence of that row in the confidence map
+// Returns if the row contains the word
+func checkAddressForString(addresses *csvAddresses, confidenceMap *map[int]int, cleanedString string, addressIdx int, columnIdx int) bool {
 	// If the current column contains a search string, then we increment the confidence of the current address
 
 	if utils.StringContains((*addresses)[addressIdx][columnIdx], (cleanedString)) {
-		if confidence, ok := (*confidenceMap)[addressIdx]; ok {
-			(*confidenceMap)[addressIdx] = confidence + 1
-			return
-		}
-		(*confidenceMap)[addressIdx] = 1
+
+		addToConfidenceMap(confidenceMap, addressIdx)
+		return true
 	}
+	return false
 }
 
-func filterAddresses(addresses *csvAddresses, query string) csvAddresses {
+func filterAddresses(addresses *csvAddresses, searchCache *lru.Cache, query string) csvAddresses {
 	// Remove special characters from the string and split on spaces
 	cleanedStrings := strings.Fields(utils.RemoveSpecialChars(query))
 
@@ -32,15 +43,37 @@ func filterAddresses(addresses *csvAddresses, query string) csvAddresses {
 	// This time complexity is O(N * M)
 	// Where N is the number of addresses we have stored, and M is the number of words in the query
 	// If performance is a concern, we can limit the number of words allowed
-	for i := 0; i < len(*addresses); i++ {
-		for j := 0; j < len(cleanedStrings); j++ {
+
+	for j := 0; j < len(cleanedStrings); j++ {
+		// If our word is in the cache, then we just need to look through that and add it to the confidence map
+		// instead of going through the entire collection
+		if addressesFromCache, ok := searchCache.Get(cleanedStrings[j]); ok {
+			fmt.Println("Contains" + cleanedStrings[j])
+
+			fmt.Println(addressesFromCache)
+
+			typedAddressesFromCache := addressesFromCache.([]int)
+
+			for i := range typedAddressesFromCache {
+				addToConfidenceMap(&confidenceMap, typedAddressesFromCache[i])
+			}
+			continue
+		}
+
+		occurances := []int{}
+
+		for i := 0; i < len(*addresses); i++ {
 			// The four columns are address, city, state, and zip.
 			// This allows us to add more columns in the future if we wish to filter on those
-			addToConfidenceMap(addresses, &confidenceMap, cleanedStrings[j], i, 3)
-			addToConfidenceMap(addresses, &confidenceMap, cleanedStrings[j], i, 4)
-			addToConfidenceMap(addresses, &confidenceMap, cleanedStrings[j], i, 5)
-			addToConfidenceMap(addresses, &confidenceMap, cleanedStrings[j], i, 6)
+			if checkAddressForString(addresses, &confidenceMap, cleanedStrings[j], i, 3) ||
+				checkAddressForString(addresses, &confidenceMap, cleanedStrings[j], i, 4) ||
+				checkAddressForString(addresses, &confidenceMap, cleanedStrings[j], i, 5) ||
+				checkAddressForString(addresses, &confidenceMap, cleanedStrings[j], i, 6) {
+				// If any of these are true, we know that the word was found in this row.
+				occurances = append(occurances, i)
+			}
 		}
+		searchCache.Add(cleanedStrings[j], occurances)
 	}
 
 	// Make a slice from the map so that we can sort it by confidence
@@ -78,7 +111,8 @@ func (handler *BaseHandler) Search(writer http.ResponseWriter, request *http.Req
 
 	// If the query parameter exists, we use that to filter the addresses
 	if query, ok := queryParams["query"]; ok {
-		results = filterAddresses(handler.addresses, query[0])
+		log.Printf("Recieved query: %s\n", query)
+		results = filterAddresses(handler.addresses, handler.searchCache, query[0])
 	} else {
 		results = csvAddresses{} // Empty slice
 	}
@@ -90,5 +124,8 @@ func (handler *BaseHandler) Search(writer http.ResponseWriter, request *http.Req
 		log.Panicln("Unable to generate json: " + err.Error())
 	}
 
+	writer.Header().Set("Content-Type", "application/json")
+	// Currently allow all origins, but should be limited in a production server
+	writer.Header().Set("Access-Control-Allow-Origin", "*")
 	writer.Write([]byte(bytes))
 }

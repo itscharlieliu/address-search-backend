@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/csv"
+	"flag"
 	"log"
 	"net/http"
 	"os"
@@ -9,14 +10,25 @@ import (
 	"github.com/itscharlieliu/address-search-backend/api"
 )
 
+const DEFAULT_FILENAME = "./redfin_2021-05-19-11-16-39.csv"
+
 func main() {
 
+	filenamePtr := flag.String("f", DEFAULT_FILENAME, "Filename of the address csv")
+	helpPtr := flag.Bool("h", false, "Display help information")
+
+	flag.Parse()
+
+	if *helpPtr {
+		flag.Usage()
+		return
+	}
+
 	// Read in the csv file
-	// TODO add flag parsing to be able to read in different files
-	addressesFile, err := os.Open("./redfin_2021-05-19-11-16-39.csv")
+	addressesFile, err := os.Open(*filenamePtr)
 
 	if err != nil {
-		log.Fatal("Unable to open file")
+		log.Fatalf("Unable to open file: %s", *filenamePtr)
 	}
 
 	reader := csv.NewReader(addressesFile)
@@ -36,6 +48,7 @@ func main() {
 	handler := api.NewBaseHandler(&addresses)
 
 	// Register the api endpoint for searching
+	// Currently will serve at http://localhost:8080/search
 	http.HandleFunc("/search", handler.Search)
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }

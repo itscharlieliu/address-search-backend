@@ -1,5 +1,11 @@
 package api
 
+import (
+	"log"
+
+	lru "github.com/hashicorp/golang-lru"
+)
+
 // Here are the headers in the csv provided by redfin
 // SALE TYPE,SOLD DATE,PROPERTY TYPE,ADDRESS,CITY,STATE OR PROVINCE,ZIP OR POSTAL CODE,PRICE,BEDS,BATHS,LOCATION,SQUARE FEET,LOT SIZE,YEAR BUILT,DAYS ON MARKET,$/SQUARE FEET,HOA/MONTH,STATUS,NEXT OPEN HOUSE START TIME,NEXT OPEN HOUSE END TIME,URL (SEE http://www.redfin.com/buy-a-home/comparative-market-analysis FOR INFO ON PRICING),SOURCE,MLS#,FAVORITE,INTERESTED,LATITUDE,LONGITUDE
 // 	- Note: This is assuming the csv format provided by redfin does not change
@@ -73,11 +79,19 @@ func csvToStructs(addresses csvAddresses) []address {
 }
 
 type BaseHandler struct {
-	addresses *csvAddresses // Arrays are already pointers. We don't need to pass in pointer here
+	addresses   *csvAddresses
+	searchCache *lru.Cache
 }
 
 func NewBaseHandler(addresses *csvAddresses) *BaseHandler {
+	searchCache, err := lru.New(2048)
+
+	if err != nil {
+		log.Fatal("Unable to initialize cache")
+	}
+
 	return &BaseHandler{
-		addresses: addresses,
+		addresses:   addresses,
+		searchCache: searchCache,
 	}
 }

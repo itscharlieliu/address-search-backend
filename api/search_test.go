@@ -36,19 +36,19 @@ func createHandler() BaseHandler {
 func TestFilterAddresses(t *testing.T) {
 	handler := createHandler()
 
-	results := filterAddresses(handler.addresses, "")
+	results := filterAddresses(handler.addresses, handler.searchCache, "")
 
 	if len(results) != 0 {
 		t.Error("Filter should not return any results with an empty string")
 	}
 
-	results = filterAddresses(handler.addresses, "invalid address")
+	results = filterAddresses(handler.addresses, handler.searchCache, "invalid address")
 
 	if len(results) != 0 {
 		t.Errorf("Filtered addressed expected 0; got %d", len(results))
 	}
 
-	results = filterAddresses(handler.addresses, "Ave")
+	results = filterAddresses(handler.addresses, handler.searchCache, "Ave")
 
 	numAddresses := 0
 	for i := 0; i < len(*handler.addresses); i++ {
