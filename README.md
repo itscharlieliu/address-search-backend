@@ -9,3 +9,13 @@
 3. Start the server 
 
 ```go run main.go```
+
+## Usage
+
+```
+$ go run main.go -h
+Usage of address-search-backend:
+  -f string
+    	Filename of the address csv (default "./redfin_2021-05-19-11-16-39.csv")
+  -h	Display help information
+```
