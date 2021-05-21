@@ -2,10 +2,12 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"sort"
 	"strings"
+	"time"
 
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/itscharlieliu/address-search-backend/utils"
@@ -100,6 +102,7 @@ func filterAddresses(addresses *csvAddresses, searchCache *lru.Cache, query stri
 // 	- query: The string that we are using to search all addresses
 // We are only processing address params for this exercise, but other params can be easily added
 func (handler *BaseHandler) Search(writer http.ResponseWriter, request *http.Request) {
+	start := time.Now()
 	queryParams := request.URL.Query()
 
 	var results csvAddresses
@@ -124,4 +127,6 @@ func (handler *BaseHandler) Search(writer http.ResponseWriter, request *http.Req
 	writer.Header().Set("Access-Control-Allow-Origin", "*")
 	writer.Write([]byte(bytes))
 
+	duration := time.Since(start)
+	fmt.Println("Duration: " + duration.String())
 }
