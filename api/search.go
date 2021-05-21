@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"sort"
@@ -48,10 +47,7 @@ func filterAddresses(addresses *csvAddresses, searchCache *lru.Cache, query stri
 		// If our word is in the cache, then we just need to look through that and add it to the confidence map
 		// instead of going through the entire collection
 		if addressesFromCache, ok := searchCache.Get(cleanedStrings[j]); ok {
-			fmt.Println("Contains" + cleanedStrings[j])
-
-			fmt.Println(addressesFromCache)
-
+			log.Printf("Used cache for search term: %s\n", cleanedStrings[j])
 			typedAddressesFromCache := addressesFromCache.([]int)
 
 			for i := range typedAddressesFromCache {
@@ -104,7 +100,6 @@ func filterAddresses(addresses *csvAddresses, searchCache *lru.Cache, query stri
 // 	- query: The string that we are using to search all addresses
 // We are only processing address params for this exercise, but other params can be easily added
 func (handler *BaseHandler) Search(writer http.ResponseWriter, request *http.Request) {
-
 	queryParams := request.URL.Query()
 
 	var results csvAddresses
@@ -128,4 +123,5 @@ func (handler *BaseHandler) Search(writer http.ResponseWriter, request *http.Req
 	// Currently allow all origins, but should be limited in a production server
 	writer.Header().Set("Access-Control-Allow-Origin", "*")
 	writer.Write([]byte(bytes))
+
 }
