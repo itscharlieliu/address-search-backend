@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"sort"
@@ -128,5 +127,5 @@ func (handler *BaseHandler) Search(writer http.ResponseWriter, request *http.Req
 	writer.Write([]byte(bytes))
 
 	duration := time.Since(start)
-	fmt.Println("Duration: " + duration.String())
+	log.Println("Duration: " + duration.String())
 }

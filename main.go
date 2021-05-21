@@ -50,5 +50,8 @@ func main() {
 	// Register the api endpoint for searching
 	// Currently will serve at http://localhost:8080/search
 	http.HandleFunc("/search", handler.Search)
+
+	log.Println("Listening...")
+
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
